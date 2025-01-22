@@ -9,12 +9,19 @@ export function index(req, res) {
   });
 }
 
-//! show post by id
 //*GET
 export function show(req, res) {
   const postId = parseInt(req.params.id);
+  const query = `
+    SELECT posts.*, GROUP_CONCAT(tags.label) AS tags
+    FROM posts
+    INNER JOIN post_tag ON post_tag.post_id = posts.id
+    INNER JOIN tags ON post_tag.tag_id = tags.id
+    WHERE posts.id = ?
+    GROUP BY posts.id;
+  `;
   const select = "SELECT * FROM posts WHERE id = ?";
-  connection.query(select, [postId], (error, results) => {
+  connection.query(query, [postId], (error, results) => {
     if (error)
       return res.status(500).json({ error: "errore nella query del DB" });
     if (results.length === 0)
@@ -75,16 +82,14 @@ export function modify(req, res) {
 //! delete post by id
 //*DELETE
 export function destroy(req, res) {
-  const id = parseInt(req.params.id); // convert string to number and whit req.params.id I get the id from the url
-  const index = posts.findIndex((e) => e.id === id); // find the index of the post by id
-  if (index !== -1) {
-    posts.splice(index, 1); // splice method remove the element from the array by index, the second parameter is the number of elements to remove
-    res.sendStatus(204); // 204 status code means that the server has successfully fulfilled the request and that there is no additional content to send in the response payload body
-  } else {
-    res.status(404);
-    res.json({
-      error: 404,
-      message: "No post found with this ID",
-    });
-  }
+  const id = parseInt(req.params.id);
+  const index = posts.findIndex((e) => e.id === id);
+  connection.query(
+    "DELETE * FROM posts WHERE id = ?",
+    [id],
+    (error, results) => {
+      if (error) res.status(500).json({ error: "errore nella query del DB" });
+      results.sendstatus(204).json({ message: "post eliminato" });
+    }
+  );
 }
