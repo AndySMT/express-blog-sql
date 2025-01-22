@@ -1,13 +1,13 @@
-const express = require("express"); // Import express
+import express from "express"; // Import express
 const router = express.Router(); // Create instance of express router
-const {
+import {
   index,
   show,
   store,
   update,
   modify,
   destroy,
-} = require("../controllers/postController");
+} from "../controllers/postController.js";
 
 // Rotta GET for all posts
 router.get("/posts", index);
@@ -20,4 +20,4 @@ router.post("/posts", store);
 // Rotta PUT for update a post
 router.put("/posts/:id", update);
 
-module.exports = router;
+export default router;

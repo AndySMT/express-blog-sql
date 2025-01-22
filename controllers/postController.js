@@ -1,50 +1,33 @@
-const posts = require("../dataBase/postsData"); // Importa l'array dei post
+import connection from "../connection.js"; // Importa la connessione al database
 
-//! index page and filtre posts by tag
 //*GET
-function index(req, res) {
-  // Legge il parametro di query 'tag'
-  const tag = req.query.tag;
-  if (tag) {
-    // Filtra i post in base al tag
-    const filteredPosts = posts.filter((post) => post.tag.includes(tag));
-    if (filteredPosts.length > 0) {
-      res.json({ lunghezza: filteredPosts.length, posts: posts }); // Restituisce i post trovati
-    } else {
-      res.status(404).send(`<i>Nessun post trovato con il tag:</i> <b>${tag}`);
-    }
-  } else {
-    // Se non c'è un tag, restituisce tutti i post
-    res.json({ lunghezza: posts.length, posts: posts });
-  }
+export function index(req, res) {
+  connection.query("SELECT * FROM posts", (error, results) => {
+    if (error)
+      return res.status(500).json({ error: "errore nella query del DB" });
+    res.json({ lunghezza: results.length, posts: results });
+  });
 }
+
 //! show post by id
 //*GET
-function show(req, res) {
-  // Estrae l'ID dai parametri della richiesta e lo converte in un numero intero
+export function show(req, res) {
   const postId = parseInt(req.params.id);
-  // Se l'ID non è un numero, restituisce un errore 400
-  if (isNaN(postId)) {
-    return res.status(400).json({
-      error: 400,
-      message: "ID non valido inserisci un numero.",
-    });
-  }
-  // Cerca il post con l'ID specificato nell'array dei post
-  const post = posts.find((post) => post.id === postId);
-  // Se il post non viene trovato, restituisce un errore 404
-  if (!post) {
-    return res.status(404).json({
-      error: 404,
-      message: "Nessun post trovato con questo ID",
-    });
-  }
-  // Se il post viene trovato, lo restituisce come risposta JSON
-  res.json(post);
+  const select = "SELECT * FROM posts WHERE id = ?";
+  connection.query(select, [postId], (error, results) => {
+    if (error)
+      return res.status(500).json({ error: "errore nella query del DB" });
+    if (results.length === 0)
+      return res.status(404).json({
+        error: 404,
+        message: "nessun post trovato con questo ID",
+      });
+    res.json(results[0]);
+  });
 }
 //! create new post
 //*POST
-function store(req, res) {
+export function store(req, res) {
   let newId = 0;
   for (let i = 0; i < posts.length; i++) {
     if (posts[i].id > newId) {
@@ -66,7 +49,7 @@ function store(req, res) {
 }
 //! update post by id (modifa tutto il post)
 //*PUT
-function update(req, res) {
+export function update(req, res) {
   const postId = parseInt(req.params.id);
   const post = posts.find((post) => post.id === postId);
   if (!post) {
@@ -84,14 +67,14 @@ function update(req, res) {
 
 // modify post by id (modifica parziale del post)
 //*PATCH
-function modify(req, res) {
+export function modify(req, res) {
   route.patch("/:id", (req, res) => {
     res.send("Modifica parziale post");
   });
 }
 //! delete post by id
 //*DELETE
-function destroy(req, res) {
+export function destroy(req, res) {
   const id = parseInt(req.params.id); // convert string to number and whit req.params.id I get the id from the url
   const index = posts.findIndex((e) => e.id === id); // find the index of the post by id
   if (index !== -1) {
@@ -105,5 +88,3 @@ function destroy(req, res) {
     });
   }
 }
-
-module.exports = { index, show, store, update, modify, destroy };

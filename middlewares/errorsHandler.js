@@ -6,4 +6,4 @@ function errorHandler(err, req, res, next) {
     Message: "Stai a canna' da qualche parte! Imbecille!",
   });
 }
-module.exports = errorHandler;
+export default errorHandler;
